@@ -1,14 +1,42 @@
+import React, { useState } from "react";
 import Image from "next/image";
 import { Toaster, toast } from "react-hot-toast";
 
-export default function Answer({ answer }: { answer: string }) {
+interface AnswerProps {
+  answer: string | { response?: string; [key: string]: any };
+}
+
+export default function Answer({ answer }: AnswerProps) {
+  const [copied, setCopied] = useState(false);
+
+  // Helper function to extract text from answer
+  const getText = (answer: any) => {
+    if (typeof answer === "string") return answer.trim();
+    if (answer && typeof answer === "object") {
+      if (typeof answer.response === "string") return answer.response.trim();
+      return JSON.stringify(answer, null, 2);
+    }
+    return "No answer available.";
+  };
+
+  const formattedAnswer = getText(answer);
+
+  console.log("Answer prop:", formattedAnswer); // Debugging log
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(formattedAnswer);
+    setCopied(true);
+    toast("Answer copied to clipboard", { icon: "✂️" });
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
     <div className="container flex h-auto w-full shrink-0 gap-4 rounded-lg border border-solid border-[#C2C2C2] bg-white p-5 lg:p-10">
       <div className="hidden lg:block">
         <Image
           unoptimized
           src="/img/Info.svg"
-          alt="footer"
+          alt="info"
           width={24}
           height={24}
         />
@@ -19,64 +47,44 @@ export default function Answer({ answer }: { answer: string }) {
             <Image
               unoptimized
               src="/img/Info.svg"
-              alt="footer"
+              alt="info"
               width={24}
               height={24}
               className="block lg:hidden"
             />
-            <h3 className="text-base font-bold uppercase text-black">
-              Answer:{" "}
-            </h3>
+            <h3 className="text-xl font-bold text-black">Answer:</h3>
           </div>
-          {answer && (
-            <div className="flex items-center gap-3">
-              {/* <Image unoptimized
-                src="/img/link.svg"
-                alt="footer"
+          {formattedAnswer && (
+            <button onClick={handleCopy}>
+              <Image
+                unoptimized
+                src={copied ? "/img/check.svg" : "/img/copy.svg"}
+                alt="copy"
                 width={20}
                 height={20}
                 className="cursor-pointer"
-              /> */}
-              <button
-                onClick={() => {
-                  navigator.clipboard.writeText(answer.trim());
-                  toast("Answer copied to clipboard", {
-                    icon: "✂️",
-                  });
-                }}
-              >
-                <Image
-                  unoptimized
-                  src="/img/copy.svg"
-                  alt="footer"
-                  width={20}
-                  height={20}
-                  className="cursor-pointer"
-                />
-              </button>
-              {/* <Image unoptimized
-                src="/img/share.svg"
-                alt="footer"
-                width={20}
-                height={20}
-                className="cursor-pointer"
-              /> */}
-            </div>
+              />
+            </button>
           )}
         </div>
-        <div className="flex flex-wrap content-center items-center gap-[15px]">
-          <div className="w-full whitespace-pre-wrap text-base font-light leading-[152.5%] text-black">
-            {answer ? (
-              answer.trim()
+
+        {/* Explanation & Code Separation */}
+        <div className="w-full space-y-4 text-base leading-[152.5%]">
+          {formattedAnswer.split("\n\n").map((block, index) => {
+            const isCode = block.includes("\n") || block.includes("  ");
+            return isCode ? (
+              <pre
+                key={index}
+                className="overflow-x-auto rounded-lg bg-gray-900 p-4 text-sm text-white"
+              >
+                <code>{block}</code>
+              </pre>
             ) : (
-              <div className="flex w-full flex-col gap-2">
-                <div className="h-6 w-full animate-pulse rounded-md bg-gray-300" />
-                <div className="h-6 w-full animate-pulse rounded-md bg-gray-300" />
-                <div className="h-6 w-full animate-pulse rounded-md bg-gray-300" />
-                <div className="h-6 w-full animate-pulse rounded-md bg-gray-300" />
-              </div>
-            )}
-          </div>
+              <p key={index} className="text-lg font-medium text-gray-800">
+                <strong className="text-black">{block}</strong>
+              </p>
+            );
+          })}
         </div>
       </div>
       <Toaster
