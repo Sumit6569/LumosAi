@@ -70,7 +70,7 @@ export default function Answer({ answer }: AnswerProps) {
 
         {/* Explanation & Code Separation */}
         <div className="w-full space-y-4 text-base leading-[152.5%]">
-          {formattedAnswer.split("\n\n").map((block: string, index) => {
+          {formattedAnswer.split("\n\n").map((block: string, index: number) => {
             const isCode = block.includes("\n") || block.includes("  ");
             return isCode ? (
               <pre
